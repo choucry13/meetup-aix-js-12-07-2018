@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import {Observable, zip} from 'rxjs';
+import {Observable, of} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
-import {map} from 'rxjs/operators';
+import {map, mergeAll, shareReplay} from 'rxjs/operators';
+import {zip} from 'rxjs';
 
 export interface CountryPhone {
   code: string;
@@ -21,23 +22,18 @@ export class NgxPhoneNumberService {
   }
 
   getAllCountryPhone(): Observable<CountryPhone[]> {
-    // dinstinct all request we need
-    const countries$ = this.http.get('./names.json');
-    const phones$ = this.http.get<any>('./phones.json');
-    // cs = countries
-    // ps = phones
-    return zip(countries$, phones$).pipe(map((items) => {
-      const countries = items[0];
-      const phones = items[1];
-      console.log('countries', countries);
-      console.log('phones', phones);
-      return Object.keys(phones).map((phone) => {
-        return {
-          name: countries[phone],
-          code: phone, prefix: phones[phone],
-          url: `http://www.countryflags.io/${phone}/flat/32.png`
-        } as CountryPhone;
-      });
-    }));
+    return this.http.get('./names.json').pipe(
+      map(countries => {
+        return this.http.get('./phone.json').pipe(
+          map((phones) => {
+            return Object.keys(phones).map((phone) => {
+              return {
+                name: countries[phone],
+                code: phone, prefix: phones[phone],
+                url: `http://www.countryflags.io/${phone}/flat/32.png`
+              } as CountryPhone;
+            });
+          }));
+      }), mergeAll(), shareReplay());
   }
 }
