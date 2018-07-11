@@ -24,7 +24,7 @@ export class NgxPhoneNumberService {
   getAllCountryPhone(): Observable<CountryPhone[]> {
     return this.http.get('./names.json').pipe(
       map(countries => {
-        return this.http.get('./phone.json').pipe(
+        return this.http.get('./phones.json').pipe(
           map((phones) => {
             return Object.keys(phones).map((phone) => {
               return {
